@@ -4,11 +4,15 @@ const dotenv = require("dotenv"); // Imports dotenv bech ta9ra environment varia
 
 const connectDB = require("./config/db");// Imports l function responsible 3ala connecting to MongoDB
 
+const authRoutes = require("./routes/authRoutes"); // Imports authentication routes
+
 dotenv.config(); // Loads environment variables men fichier .env 
 
 const app = express(); // tasna3  Express application
 
 app.use(express.json()); // t5ali  API  yreceive w process JSON data
+
+app.use("/api/auth", authRoutes); // Connects authentication routes l API
 
 connectDB(); // Establishes connection l the MongoDB database
 
