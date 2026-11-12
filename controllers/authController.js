@@ -3,6 +3,7 @@ const User = require("../models/User"); // Imports User model bech yinteract m3a
 
 const bcrypt = require("bcryptjs"); // Imports bcryptjs bech ncryptiw les mots de passe w n9arnou binethoum wa9t el login
 
+const jwt = require("jsonwebtoken"); // Imports jsonwebtoken bech naamlou tokens d'authentification lel utilisateurs
 
 // Registers a new user
 const register = async (req, res) => {
@@ -116,5 +117,6 @@ const login = async (req, res) => {
 
 // Exports authentication functions bech nesta3mlouhoum fi routes
 module.exports = {
-    register
+    register,
+    login
 };
