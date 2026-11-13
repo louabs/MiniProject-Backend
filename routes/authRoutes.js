@@ -6,6 +6,7 @@ const { register, login } = require("../controllers/authController"); // Imports
 
 const authMiddleware = require("../middlewares/authMiddleware"); // Imports auth middleware bech tprotecti les routes bel JWT tokens
 
+const roleMiddleware = require("../middlewares/roleMiddleware"); // Imports role middleware bech tverify user permissions
 
 // Route to register user jdid
 router.post("/register", register);
@@ -20,7 +21,17 @@ router.get("/me", authMiddleware, (req, res) => {
         user: req.user
     });
 });
-
+// User eli 3andou role manager barka 3andou ha9 yod5lou fi route hedhi
+router.get(
+    "/manager-test",
+    authMiddleware,
+    roleMiddleware(["manager"]),
+    (req, res) => {
+        res.json({
+            message: "Bienvenue manager"
+        });
+    }
+);
 
 // Exports the router bech nesma3louha fi server.js
 module.exports = router;
