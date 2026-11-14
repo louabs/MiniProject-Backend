@@ -115,37 +115,104 @@ const createTask = async (req, res) => {
 
 
 
-// Fonction bach naamlou recuperation lil task
+
+ 
+ // Fonction bach naamlou recuperation lil tasks avec recherche et filtering
 const getTasks = async (req, res) => {
     try {
 
-        let tasks;
+        // Njibou les paramètres men URL
+        const { search, statut, projet, utilisateurAssigne } = req.query;
 
-        if (req.user.role === "manager") {
+        let filtre = {};
 
-            // Manager ychouf les tasks lkol
-            tasks = await Task.find()
-                .populate("projet", "nom proprietaire")
-                .populate("utilisateurAssigne", "nom login")
-                .sort({ dateCreation: -1 });
-
-        } else {
-
-            // User ychouf ken les tasks eli affectés lih
-            tasks = await Task.find({
-                utilisateurAssigne: req.user.id
-            })
-                .populate("projet", "nom proprietaire")
-                .populate("utilisateurAssigne", "nom login")
-                .sort({ dateCreation: -1 });
+        // Manager ynajem ychouf les tasks lkol
+        // User ychouf ken les tasks affectés lih
+        if (req.user.role !== "manager") {
+            filtre.utilisateurAssigne = req.user.id;
         }
 
+        // Filtering selon statut
+        if (statut) {
 
+            const statutsAutorises = ["todo", "doing", "done"];
+
+            // Nethabtou eli statut valide
+            if (!statutsAutorises.includes(statut)) {
+                return res.status(400).json({
+                    message: "Statut invalide",
+                    statutsAutorises
+                });
+            }
+
+            filtre.statut = statut;
+        }
+
+        // Filtering selon projet
+        if (projet) {
+
+            // Nethabtou men identifiant projet
+            if (!mongoose.Types.ObjectId.isValid(projet)) {
+                return res.status(400).json({
+                    message: "Identifiant du projet invalide"
+                });
+            }
+
+            filtre.projet = projet;
+        }
+
+        // Filtering selon utilisateur affecté
+        if (utilisateurAssigne) {
+
+            // Ken user, ma ynajemch yfiltri les tâches mta3 les autres
+            if (req.user.role !== "manager") {
+                return res.status(403).json({
+                    message: "Seul le manager peut filtrer par utilisateur"
+                });
+            }
+
+            // Nethabtou men identifiant utilisateur
+            if (!mongoose.Types.ObjectId.isValid(utilisateurAssigne)) {
+                return res.status(400).json({
+                    message: "Identifiant utilisateur invalide"
+                });
+            }
+
+            filtre.utilisateurAssigne = utilisateurAssigne;
+        }
+
+        // Recherche selon titre ou description
+        if (search && search.trim()) {
+
+            // "i" ma3neha recherche ma tfara9ch bin majuscule w minuscule
+            const motRecherche = new RegExp(
+                search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                "i"
+            );
+
+            // Nlawjou 3al mot recherché fi titre wala description
+            filtre.$or = [
+                { titre: motRecherche },
+                { description: motRecherche }
+            ];
+        }
+
+        // Nrecuperiw les tasks selon les filtres
+        const tasks = await Task.find(filtre)
+
+            // Affichage des informations mta3 projet associé
+            .populate("projet", "nom proprietaire")
+
+            // Affichage des informations mta3 utilisateur affecté
+            .populate("utilisateurAssigne", "nom login")
+
+            .sort({ dateCreation: -1 });
+
+        // Nraj3ou resultat lel client
         res.status(200).json({
             message: "Liste des tâches récupérée avec succès",
             tasks
         });
-
 
     } catch (error) {
 
@@ -156,6 +223,7 @@ const getTasks = async (req, res) => {
 
     }
 };
+
 
 // Fonction bach naamlou affectation lil task
 const assignTask = async (req, res) => {

@@ -44,29 +44,58 @@ const createProject = async (req, res) => { // async ma3neha la fonction tista3m
     
 
 
-
-// Fonction bach na3mlou recuperation lil projet 
+// Fonction bach naamlou recuperation lil projets avec recherche et filtering
 const getProjects = async (req, res) => {
     try {
 
-        let projects; // variabale nal9aw fiha les projets recupérés min mongodb
+        // Njibou les paramètres men URL
+        const { search, statut } = req.query;
 
-         
-        if (req.user.role === "manager") { // nthabtou est ce que user el connecté houa manager
+        let filtre = {};
 
-            projects = await Project.find()  // ken ey tsir recuperation li tous les projects
-                .populate("proprietaire", "nom login");
-
-        } else {
-
-            projects = await Project.find({  // sinon yrecuperi ken el project correspondant lil user htathaka 
-                proprietaire: req.user.id
-            }).populate("proprietaire", "nom login");
-
+        // Ken user, ychouf ken les projets mte3ou
+        // Manager ynajem ychouf les projets lkol
+        if (req.user.role !== "manager") {
+            filtre.proprietaire = req.user.id;
         }
 
+        // Filtering selon statut
+        if (statut) {
+
+            // Nethabtou eli statut mawjoud fel liste autorisée
+            const statutsValides = ["en cours", "terminé", "en pause"];
+
+            if (!statutsValides.includes(statut)) {
+                return res.status(400).json({
+                    message: "Statut invalide",
+                    statutsAutorises: statutsValides
+                });
+            }
+
+            filtre.statut = statut;
+        }
+
+        // Recherche selon nom ou description
+        if (search && search.trim()) {
+
+            const motRecherche = new RegExp(
+                search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                "i"
+            );
+
+            // Nlawjou fel nom wala description
+            filtre.$or = [
+                { nom: motRecherche },
+                { description: motRecherche }
+            ];
+        }
+
+        // Recuperation des projets selon les filtres
+        const projects = await Project.find(filtre)
+            .populate("proprietaire", "nom login");
+
         res.status(200).json({
-            message: "Liste des projets récupérée avec succès", // nraj3ou les projects lil user bil statut HTTP 200 (OK)
+            message: "Liste des projets récupérée avec succès",
             projects
         });
 
