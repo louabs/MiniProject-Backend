@@ -6,6 +6,10 @@ const connectDB = require("./config/db");// Imports l function responsible 3ala 
 
 const authRoutes = require("./routes/authRoutes"); // Imports authentication routes
 
+const projectRoutes = require("./routes/projectRoutes");
+
+const taskRoutes = require("./routes/taskRoutes");
+
 dotenv.config(); // Loads environment variables men fichier .env 
 
 const app = express(); // tasna3  Express application
@@ -13,6 +17,12 @@ const app = express(); // tasna3  Express application
 app.use(express.json()); // t5ali  API  yreceive w process JSON data
 
 app.use("/api/auth", authRoutes); // Connects authentication routes l API
+
+app.use("/api/projects", projectRoutes);
+
+console.log("Project routes chargées !");
+
+app.use("/api/tasks", taskRoutes);
 
 connectDB(); // Establishes connection l the MongoDB database
 
